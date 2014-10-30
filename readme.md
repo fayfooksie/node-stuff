@@ -12,6 +12,15 @@ The master process for my personal site. It runs all child processes in `startup
 - `use [id]` - select process
 - `send [data]` - send data to selected process (handle with `process.on("message", fnc)`)
 
+####Startup
+Processes that run on startup can be defined in `startup.txt` in the current directory, skipping lines between paths. An example startup.txt, sorting processes into folders:
+```
+app.js
+site/forum.js
+games/spaceships.js
+games/online-pong.js
+```
+
 ####Communication
 For pretty logging, replace `console.log(a, b, c, ...)` with `process.send([a, b, c, ...])`
 
