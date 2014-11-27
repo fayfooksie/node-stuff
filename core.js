@@ -1,11 +1,9 @@
-"use strict";
-
 //include
 var	fs=require("fs"),
 	rl=require("readline"),
 	cp=require("child_process");
 
-//format
+//formatting
 var	fmt={
 	cp_err: "\x1b[31m>>\x1b[39m%s",
 	cp_out: "\x1b[32m>>\x1b[39m%s",
@@ -21,7 +19,8 @@ var	fmt={
 	};
 
 //input
-var	cli=rl.createInterface(process.stdin, process.stdout);
+var	input=null,
+	cli=rl.createInterface(process.stdin, process.stdout);
 console.log=function(initial) {
 	return function() {
 		cli.output.write("\x1b[2K\x1b[3D");
@@ -30,7 +29,7 @@ console.log=function(initial) {
 		};
 	}(console.log);
 cli.prompt();
-cli.on("line", function(data) {
+cli.on("line", input=function(data) {
 	data=data.toString().split(/^(\w+) ?/);
 	var	command=data[1];
 	data=data[2];
@@ -42,6 +41,7 @@ cli.on("line", function(data) {
 		case "help":
 			console.log(fmt.out(
 					"help             this message"+
+				"\r\ndir     [path]   directory to load from"+
 				"\r\neval    [code]   evaluate code"+
 				"\r\nexec    [code]   run shell command"+
 				"\r\nlist             list child processes"+
@@ -52,6 +52,11 @@ cli.on("line", function(data) {
 				"\r\nuse     [id]     select process to send data to"+
 				"\r\nsend    [data]   send data to selected process"
 				));
+			break;
+		case "cd":
+		case "dir":
+			dir=data;
+			console.log(fmt.out("set dir to '%s'"), dir);
 			break;
 		case "eval":
 			try {
@@ -132,8 +137,13 @@ cli.on("line", function(data) {
 				}
 			break;
 		case "send":
-			usecp.send(data);
-			console.log(fmt.out("cp > %s"), data);
+			if(usecp) {
+				usecp.send(data);
+				console.log(fmt.out("cp > %s"), data);
+				}
+			else {
+				console.log(fmt.err("no process selected"));
+				}
 			break;
 		}
 	console.log();
@@ -141,15 +151,16 @@ cli.on("line", function(data) {
 	});
 
 //processes
-var	cps={},
-	usecp=null,
-	ignore={};
+var	dir="",
+	cps={},
+	ignore={},
+	usecp=null;
 function spawn(path) {
 	var	id=path.replace(/.+\//, "");
 	console.log(fmt.out("loading %s..."), id);
-	cps[id]=cp.fork(path);
+	cps[id]=cp.fork(dir+path);
 	cps[id]._name=id;
-	cps[id]._path=path;
+	cps[id]._path=dir+path;
 	cps[id].on("exit", event_exit);
 	cps[id].on("error", event_error);
 	cps[id].on("message", event_message);
@@ -179,9 +190,8 @@ fs.readFile("startup.txt", function(error, data) {
 	if(!error) {
 		data=data.toString().split(/\r?\n/);
 		for(var i=0; i<data.length; ++i) {
-			spawn(data[i]);
+			input(data[i]);
 			}
-		usecp=cps[data[0]];
 		console.log();
 		}
 	});

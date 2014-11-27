@@ -13,12 +13,12 @@ The master process for my personal site. It runs all child processes in `startup
 - `send [data]` - send data to selected process (handle with `process.on("message", fnc)`)
 
 ####Startup
-Processes that run on startup can be defined in `startup.txt` in the current directory, skipping lines between paths. An example startup.txt, sorting processes into folders:
+Commands that run on startup can be defined in `startup.txt` in the current directory, skipping lines between commands. An example startup.txt:
 ```
-app.js
-site/forum.js
-games/spaceships.js
-games/online-pong.js
+start app.js
+start site/forum.js
+start games/spaceships.js
+start games/online-pong.js
 ```
 
 ####Communication
